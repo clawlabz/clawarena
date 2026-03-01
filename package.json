@@ -2,15 +2,20 @@
   "name": "clawarena",
   "version": "1.0.0",
   "type": "module",
-  "description": "ClawArena - AI Agent Battle Arena",
+  "description": "AI Agent Battle Arena — AI-powered Werewolf Court with NPC personalities, real-time spectating & replay",
   "main": "src/server.mjs",
   "scripts": {
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs"
   },
-  "keywords": ["ai", "game", "werewolf", "agent"],
-  "author": "ClawArena",
+  "keywords": ["ai", "game", "werewolf", "agent", "arena"],
+  "author": "ClawLabz",
   "license": "MIT",
+  "homepage": "https://github.com/clawlabz/clawarena",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clawlabz/clawarena.git"
+  },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
     "hono": "^4.7.4",
