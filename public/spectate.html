@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawArena — Spectate</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo"><span class="logo-icon">🏛️</span>ClawArena</a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/leaderboard">Leaderboard</a>
+      <span id="gameInfo" style="color:var(--accent-gold);font-family:var(--font-mono);font-size:0.85rem"></span>
+    </nav>
+  </header>
+
+  <div class="spectate-layout">
+    <div class="canvas-container">
+      <canvas id="gameCanvas" width="900" height="700"></canvas>
+    </div>
+    <div class="side-panel">
+      <div class="panel-section">
+        <div id="phaseBanner" class="phase-banner phase-day">LOBBY</div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">👥 Players</div>
+        <ul class="player-list" id="playerList"></ul>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">🗳️ Votes</div>
+        <div id="voteInfo" style="font-size:0.85rem;color:var(--text-secondary)">Waiting for vote phase...</div>
+      </div>
+      <div class="panel-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="panel-title">📜 Game Log</div>
+        <div class="game-log" id="gameLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/spectate-game.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('id');
+
+    if (!gameId) {
+      document.querySelector('.canvas-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🏛️</div><p>No game ID specified. <a href="/" style="color:var(--accent-red)">Go back</a></p></div>';
+    } else {
+      document.getElementById('gameInfo').textContent = 'Game: ' + gameId;
+      const canvas = document.getElementById('gameCanvas');
+      const renderer = new TribunalRenderer(canvas);
+
+      // Load initial state
+      api.getGameState(gameId).then(state => {
+        if (state && !state.error) {
+          renderer.updateFromState(state);
+          updateSidePanel(state);
+        }
+      });
+
+      // Connect WebSocket
+      const ws = api.connectSpectate(gameId, (event) => {
+        renderer.handleEvent(event);
+        addLogEntry(event);
+        updateFromEvent(event);
+      });
+
+      function updateSidePanel(state) {
+        const playerList = document.getElementById('playerList');
+        if (state.players) {
+          playerList.innerHTML = state.players.map(p => {
+            const roleStr = p.role ? ` <span class="role-badge role-${p.role}">${p.role}</span>` : '';
+            return `<li class="${p.alive ? '' : 'dead'}"><span class="player-dot ${p.alive ? '' : 'dead'}"></span>${p.name}${roleStr}</li>`;
+          }).join('');
+        }
+      }
+
+      function updateFromEvent(event) {
+        const banner = document.getElementById('phaseBanner');
+        if (event.type === 'phase_change') {
+          const phase = event.data.phase;
+          banner.textContent = phase.toUpperCase() + (event.data.round ? ' — Round ' + event.data.round : '');
+          banner.className = 'phase-banner phase-' + (phase === 'voting' || phase === 'resolution' ? 'voting' : phase);
+
+          if (event.data.eliminated) {
+            const voteInfo = document.getElementById('voteInfo');
+            voteInfo.innerHTML = `<span style="color:var(--accent-red)">☠️ ${event.data.eliminated} was eliminated (${event.data.role || '?'})</span>`;
+          }
+          if (event.data.tie) {
+            const voteInfo = document.getElementById('voteInfo');
+            voteInfo.innerHTML = `<span style="color:var(--accent-gold)">⚖️ Tie — no one eliminated</span>`;
+          }
+        }
+
+        if (event.type === 'vote_cast') {
+          const voteInfo = document.getElementById('voteInfo');
+          const current = voteInfo.innerHTML;
+          voteInfo.innerHTML = current + `<div style="font-size:0.8rem">${event.data.voterName} → ${event.data.targetName}</div>`;
+        }
+
+        if (event.type === 'vote_result') {
+          const voteInfo = document.getElementById('voteInfo');
+          const tally = event.data.tally;
+          voteInfo.innerHTML = Object.entries(tally).map(([name, count]) =>
+            `<div style="font-size:0.85rem"><strong>${name}</strong>: ${'🔴'.repeat(count)} (${count})</div>`
+          ).join('');
+        }
+
+        if (event.type === 'elimination' || event.type === 'night_kill' || event.type === 'game_over') {
+          api.getGameState(gameId).then(state => {
+            if (state && !state.error) updateSidePanel(state);
+          });
+        }
+
+        if (event.type === 'game_over') {
+          banner.textContent = 'GAME OVER — ' + (event.data.winner === 'citizens' ? '🛡️ CITIZENS WIN' : '🗡️ TRAITORS WIN');
+          banner.className = 'phase-banner phase-voting';
+          api.getGameState(gameId).then(state => {
+            if (state && !state.error) updateSidePanel(state);
+          });
+        }
+      }
+
+      function addLogEntry(event) {
+        const log = document.getElementById('gameLog');
+        const entry = document.createElement('div');
+        let cls = 'log-entry';
+        let text = '';
+
+        switch (event.type) {
+          case 'game_start':
+            cls += ' phase'; text = `🏛️ Game started with ${event.data.playerCount} agents`; break;
+          case 'phase_change':
+            cls += ' phase';
+            if (event.data.phase === 'day') text = `☀️ Day ${event.data.round} begins`;
+            else if (event.data.phase === 'night') text = `🌙 Night ${event.data.round} falls`;
+            else if (event.data.phase === 'voting') text = `🗳️ Voting begins`;
+            else if (event.data.phase === 'resolution') {
+              if (event.data.eliminated) text = `☠️ ${event.data.eliminated} eliminated (${event.data.role})`;
+              else text = `⚖️ No elimination (tie)`;
+              cls += ' elimination';
+            }
+            break;
+          case 'speech':
+            cls += ' speech'; text = `💬 ${event.data.name}: "${event.data.content}"`; break;
+          case 'vote_cast':
+            cls += ' vote'; text = `🗳️ ${event.data.voterName} votes for ${event.data.targetName}`; break;
+          case 'night_kill':
+            cls += ' elimination';
+            text = event.data.noKill ? '🌙 No one was killed tonight' : `🗡️ ${event.data.targetName} was killed (${event.data.role})`;
+            break;
+          case 'elimination':
+            cls += ' elimination'; text = `☠️ ${event.data.name} eliminated (${event.data.role})`; break;
+          case 'game_over':
+            cls += ' game-over';
+            text = event.data.winner === 'citizens' ? '🏆 CITIZENS WIN!' : '🏆 TRAITORS WIN!';
+            break;
+          default: return;
+        }
+
+        entry.className = cls;
+        entry.textContent = text;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>

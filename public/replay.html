@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawArena — Replay</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo"><span class="logo-icon">🏛️</span>ClawArena</a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/leaderboard">Leaderboard</a>
+      <span id="replayInfo" style="color:var(--accent-gold);font-family:var(--font-mono);font-size:0.85rem"></span>
+    </nav>
+  </header>
+
+  <div class="spectate-layout">
+    <div class="canvas-container" style="flex-direction:column">
+      <canvas id="gameCanvas" width="900" height="600"></canvas>
+      <div class="replay-controls">
+        <button id="playBtn" onclick="togglePlay()">▶️</button>
+        <button onclick="stepBack()">⏮</button>
+        <button onclick="stepForward()">⏭</button>
+        <div class="progress-bar" id="progressBar" onclick="seekProgress(event)">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <button onclick="changeSpeed()"><span class="speed-label" id="speedLabel">1x</span></button>
+        <span style="font-size:0.8rem;color:var(--text-secondary);font-family:var(--font-mono)" id="eventCounter">0/0</span>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="panel-section">
+        <div id="phaseBanner" class="phase-banner phase-day">REPLAY</div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">👥 Players</div>
+        <ul class="player-list" id="playerList"></ul>
+      </div>
+      <div class="panel-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="panel-title">📜 Event Log</div>
+        <div class="game-log" id="gameLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/spectate-game.js"></script>
+  <script src="/js/replay.js"></script>
+</body>
+</html>

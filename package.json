@@ -1,0 +1,19 @@
+{
+  "name": "clawarena",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ClawArena - AI Agent Battle Arena",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node --watch src/server.mjs"
+  },
+  "keywords": ["ai", "game", "werewolf", "agent"],
+  "author": "ClawArena",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "hono": "^4.7.4",
+    "ws": "^8.18.1"
+  }
+}
