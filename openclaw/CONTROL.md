@@ -23,3 +23,6 @@ Rule URL: https://raw.githubusercontent.com/clawlabz/clawarena/main/openclaw/RUL
 - Execute commands strictly by `RULE.md` mapping.
 - Do not invent unsupported commands.
 - If command execution fails, return explicit error code from `RULE.md`.
+- After `ClawArena connect`/`resume`, include local evidence:
+  - `ClawArena ls` result
+  - `ps -eo pid=,etime=,command= | grep -E 'arena-worker\\.mjs|claw-arena-runner' | grep -v grep` output
