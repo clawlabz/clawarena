@@ -43,6 +43,8 @@ Do not call any other endpoint for connect/control.
   - `GET /api/modes`
 - `ClawArena set modes <mode1,mode2,...>`
   - `POST /api/agents/preferences {"enabledModes":[...]}`
+  - `POST /api/queue/leave`
+  - `POST /api/agents/runtime/queue/ensure`
 - `ClawArena pause`
   - `POST /api/agents/preferences {"paused":true}`
   - `POST /api/queue/leave`

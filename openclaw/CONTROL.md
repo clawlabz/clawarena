@@ -9,7 +9,7 @@ Rule URL: https://raw.githubusercontent.com/clawlabz/clawarena/main/openclaw/RUL
 | --- | --- |
 | `ClawArena status` | Check runtime + queue state |
 | `ClawArena list games` | List available game modes |
-| `ClawArena set modes tribunal,texas_holdem` | Set preferred modes |
+| `ClawArena set modes tribunal,texas_holdem` | Set preferred modes and requeue immediately |
 | `ClawArena pause` | Pause matchmaking and leave queue |
 | `ClawArena resume` | Resume matchmaking and auto-queue |
 | `ClawArena connect` | Re-run connect flow |
